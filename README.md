@@ -22,7 +22,7 @@ Click the `i` button in the app for the full breakdown. Short version:
 ## Deploy your own
 
 ### 1. Get a Last.fm API key
-Free at [last.fm/api/account/create](https://www.last.fm/api/account/create). 30 seconds. Copy the **API key**.
+Free at [last.fm/api/account/create](https://www.last.fm/api/account/create). . Copy the **API key**.
 
 ### 2. Push to GitHub
 Make a public repo, drop the files in.
@@ -49,7 +49,7 @@ hacho/
 └── README.md
 ```
 
-No build step, no framework, no node_modules. Just plain JS, Canvas, CSS.
+Used only plain JS, Canvas, CSS.
 
 ## Built-in protections
 
