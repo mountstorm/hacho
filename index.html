@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>hacho · the visible sound of a song</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230a0908'/%3E%3Cpath d='M28 78 V22 h7 l15 32 l15-32 h7 V78 h-7 V38 L51 70 h-2 L34 38 V78 z' fill='%23f5f1e8'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0908;
+    --bg-2: #131110;
+    --ink: #f5f1e8;
+    --ink-dim: #8a857a;
+    --accent: #ff5b1f;
+    --accent-2: #fce570;
+    --line: #2a2826;
+    --grain-opacity: 0.06;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: var(--grain-opacity);
+    mix-blend-mode: overlay;
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+    position: relative;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 56px;
+  }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .info-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .info-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: rotate(15deg);
+  }
+  .logo {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-size: 32px;
+    letter-spacing: -0.03em;
+    font-style: italic;
+  }
+  .logo span { color: var(--accent); }
+  .header-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* MODAL */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .modal-backdrop.visible { opacity: 1; pointer-events: auto; }
+  .modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.96);
+    width: min(640px, calc(100vw - 32px));
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    z-index: 201;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  }
+  .modal.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 1;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .modal-close:hover { color: var(--accent); border-color: var(--accent); }
+  .modal-body { padding: 48px 40px 40px; }
+  .modal-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .modal h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+  .modal h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
+  .modal h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent-2);
+    margin: 24px 0 8px;
+  }
+  .modal p {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .modal code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,91,31,0.12);
+    color: var(--accent-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  .modal ul.axes {
+    list-style: none;
+    margin: 12px 0 8px;
+    padding: 0;
+  }
+  .modal ul.axes li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 14px;
+  }
+  .modal ul.axes li:last-child { border-bottom: none; }
+  .modal ul.axes strong {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-style: italic;
+  }
+  .modal ul.axes span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.05em;
+  }
+  .modal-footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .modal-footer a { color: var(--accent-2); text-decoration: none; }
+  .modal-footer a:hover { text-decoration: underline; }
+
+  /* HERO */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    margin-bottom: 64px;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(48px, 7vw, 96px);
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .hero p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-dim);
+    max-width: 380px;
+    margin-top: 24px;
+  }
+
+  /* CONTROLS */
+  .controls {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    padding: 28px;
+    border-radius: 2px;
+  }
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+  }
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    padding: 6px 0;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-bottom-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  button.primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 14px 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+    transition: transform 0.15s, background 0.15s;
+  }
+  button.primary:hover { transform: translateY(-1px); background: var(--accent-2); color: var(--bg); }
+  button.primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* OUTPUT */
+  .output-section {
+    display: none;
+    margin-top: 32px;
+  }
+  .output-section.visible { display: block; }
+
+  .output-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+  /* CARD */
+  .card-wrap {
+    position: relative;
+    perspective: 1200px;
+  }
+  .card {
+    position: relative;
+    background: linear-gradient(160deg, #1d1b18 0%, #0e0d0c 100%);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      0 0 0 1px var(--line),
+      0 0 80px -20px var(--mood-glow-far, transparent);
+    transition: transform 0.6s ease, box-shadow 0.6s ease;
+    aspect-ratio: 3 / 4.2;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* Animated mood blooms — transform-based, hardware accelerated, no flicker.
+     Two big soft circles drift around behind the content. */
+  .bloom {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80%;
+    height: 60%;
+    border-radius: 50%;
+    pointer-events: none;
+    will-change: transform;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    filter: blur(40px);
+  }
+  .card.has-art .bloom { opacity: 1; }
+  .bloom-1 {
+    background: radial-gradient(circle, var(--mood-tint, transparent) 0%, transparent 70%);
+    animation: bloom1Drift 22s ease-in-out infinite;
+  }
+  .bloom-2 {
+    background: radial-gradient(circle, var(--mood-tint-2, transparent) 0%, transparent 70%);
+    animation: bloom2Drift 26s ease-in-out infinite;
+  }
+  @keyframes bloom1Drift {
+    0%, 100% { transform: translate(-10%, -20%); }
+    25%      { transform: translate(60%,  10%); }
+    50%      { transform: translate(30%, 50%); }
+    75%      { transform: translate(-20%, 30%); }
+  }
+  @keyframes bloom2Drift {
+    0%, 100% { transform: translate(50%,  80%); }
+    25%      { transform: translate(-10%, 60%); }
+    33%      { transform: translate(70%,  20%); }
+    66%      { transform: translate(20%,  10%); }
+  }
+  .card:hover .bloom-1 { animation-duration: 10s; }
+  .card:hover .bloom-2 { animation-duration: 12s; }
+
+  .card-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  /* Sweep highlight that travels across the card on hover */
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 30%, var(--mood-sweep, rgba(255,255,255,0.06)) 50%, transparent 70%);
+    transform: translateX(-110%);
+    pointer-events: none;
+    transition: transform 1.1s ease;
+    mix-blend-mode: screen;
+  }
+
+  .card:hover {
+    transform: rotateY(-3deg) rotateX(2deg);
+    animation-duration: 8s; /* speeds up the bloom drift on hover */
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 40px 80px -20px rgba(0,0,0,0.8),
+      0 0 0 1px var(--line),
+      0 0 120px -10px var(--mood-glow-far, transparent);
+  }
+  .card:hover::after {
+    transform: translateX(110%);
+  }
+
+  .ascii-frame {
+    background:
+      radial-gradient(circle at 50% 50%, var(--mood-frame-tint, transparent) 0%, transparent 70%),
+      #050403;
+    border-radius: 6px;
+    padding: 14px;
+    flex-grow: 0;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04),
+      inset 0 0 60px var(--mood-frame-tint, transparent);
+    transition: box-shadow 0.6s ease;
+  }
+  .card:hover .ascii-frame {
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.08),
+      inset 0 0 100px var(--mood-frame-tint-strong, transparent);
+  }
+  .ascii-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.05), transparent 60%);
+    pointer-events: none;
+  }
+  pre.ascii {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.5px;
+    line-height: 7.5px;
+    letter-spacing: 0;
+    white-space: pre;
+    color: var(--art-color, var(--accent));
+    text-shadow: 0 0 6px var(--art-glow, rgba(255,91,31,0.4));
+    margin: 0;
+  }
+
+  .card-meta { margin-top: 18px; flex-grow: 1; display: flex; flex-direction: column; }
+  .card-tags {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+  }
+  .card-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 22px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .card-artist {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink-dim);
+    margin-bottom: 14px;
+  }
+
+  .progress-row {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-dim);
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    height: 2px;
+    background: var(--line);
+    border-radius: 2px;
+    position: relative;
+    margin-bottom: 14px;
+  }
+  .progress-bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 32%;
+    background: var(--ink);
+    border-radius: 2px;
+  }
+  .controls-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    color: var(--ink);
+    font-size: 14px;
+  }
+  .controls-row svg { opacity: 0.85; }
+  .play-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--ink); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* DETAILS */
+  .details h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .details h3 em { font-style: italic; color: var(--accent); font-weight: 600; }
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .tag {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: lowercase;
+    color: var(--ink);
+  }
+  .tag.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .download-btn {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    padding: 14px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 12px;
+    margin-right: 8px;
+    transition: all 0.2s;
+  }
+  .download-btn:hover { background: var(--ink); color: var(--bg); }
+
+  .status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    margin-top: 16px;
+    letter-spacing: 0.05em;
+  }
+  .status.error { color: var(--accent); }
+
+  .help {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-dim);
+    margin-top: 8px;
+    letter-spacing: 0.05em;
+  }
+  .help a { color: var(--accent-2); }
+
+  .footnote {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 800px) {
+    .hero, .output-grid { grid-template-columns: 1fr; gap: 32px; }
+    .row { grid-template-columns: 1fr; }
+  }
+
+  /* loading state */
+  .pulse {
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo">hacho<span>.</span></div>
+    <div class="header-right">
+      <span class="header-meta">v0.1</span>
+      <button class="info-btn" id="infoBtn" aria-label="how it works">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h1>every song has a<br/><em>shape</em>. we draw it.</h1>
+      <p>Type a track. We pull its mood tags from Last.fm, run them through a deterministic ASCII generator, and print you a card you can save.</p>
+    </div>
+    <div class="controls">
+      <div class="field">
+        <label for="track">track</label>
+        <input type="text" id="track" placeholder="e.g. Starboy" />
+      </div>
+      <div class="field">
+        <label for="artist">artist</label>
+        <input type="text" id="artist" placeholder="The Weeknd" />
+      </div>
+      <button class="primary" id="generate">Generate Card</button>
+      <div class="help">
+        Mood data via Last.fm · no signup needed
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+  </section>
+
+  <section class="output-section" id="output">
+    <div class="output-grid">
+      <div class="card-wrap">
+        <div class="card" id="card">
+          <div class="bloom bloom-1"></div>
+          <div class="bloom bloom-2"></div>
+          <div class="ascii-frame">
+            <pre class="ascii" id="ascii"></pre>
+          </div>
+          <div class="card-meta">
+            <div class="card-tags" id="cardTags"></div>
+            <div class="card-title" id="cardTitle">—</div>
+            <div class="card-artist" id="cardArtist">—</div>
+            <div class="progress-row">
+              <span id="cardElapsed">1:12</span>
+              <span id="cardDuration">—:—</span>
+            </div>
+            <div class="progress-bar"></div>
+            <div class="controls-row">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-label="prev"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+              <div class="play-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-label="play"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-label="next"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="details">
+        <h3 id="moodHeadline">a <em>—</em> kind of song.</h3>
+        <p id="moodNote" style="color: var(--ink-dim); line-height: 1.6; margin-bottom: 24px;"></p>
+        <div class="tag-cloud" id="tagCloud"></div>
+        <button class="download-btn" id="dlPng">Download PNG</button>
+        <button class="download-btn" id="dlAscii">Download ASCII</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- INFO MODAL -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal" id="infoModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="modalClose" aria-label="close">×</button>
+    <div class="modal-body">
+      <div class="modal-eyebrow">how it works</div>
+      <h2 id="modalTitle">a song, turned into <em>math</em>.</h2>
+      <p>Here's the trick: we never look at the audio. We look at the <strong>words</strong> people use to describe it.</p>
+
+      <h3>step 1 · words</h3>
+      <p>Last.fm has 20 years of human-written tags — <code>grunge</code>, <code>dreamy</code>, <code>melancholic</code>. We grab them.</p>
+
+      <h3>step 2 · numbers</h3>
+      <p>Each tag votes on four sliders — energy, valence (sad↔happy), density, organic vs synthetic. Add the votes up. A song becomes four numbers.</p>
+
+      <h3>step 3 · shape</h3>
+      <p>Those numbers warp a noise field. Energetic songs go choppy. Sad songs darken at the edges. Acoustic ones bloom soft from the center. Electronic ones snap to a grid.</p>
+
+      <h3>step 4 · ink</h3>
+      <p>Pick characters that match — curves like <code>o O 0</code> for warm, blocks like <code>█ ▓ #</code> for cold. Pick a color from the same numbers. Print.</p>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <span>hacho</span>
+    <span>Mountstorm Labs</span>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   HACHO — deterministic ASCII art from Last.fm tags
+   a Mountstorm Labs project
+   ============================================================ */
+
+// ---------- MOOD CLASSIFICATION ------------------------------
+// Map raw Last.fm tags onto 4 axes: energy, valence, density, organicness
+
+// Layer 1: explicit mood/descriptor keywords (strong signal)
+const MOOD_LEXICON = {
+  // energy: -1 (calm) to +1 (intense)
+  energy: {
+    high: ['aggressive','intense','energetic','heavy','hard rock','metal','punk','hardcore','dance','party','upbeat','fast','loud','noisy','thrash','screamo','industrial','speed metal','death metal','grunge','alternative rock','rock','indie rock','garage','riot','banger','headbanger','adrenaline','workout','pump','crushing','brutal','fierce','anthem','epic','furious','rage','wild','frantic'],
+    low:  ['chill','ambient','calm','mellow','soft','quiet','sleep','peaceful','relaxing','slow','downtempo','easy listening','lullaby','meditation','spa','dreamy','floating','gentle','tranquil','serene','soothing','laid back','laidback','lazy','sunday','morning','reading','study','focus','contemplative']
+  },
+  // valence: -1 (sad) to +1 (happy)
+  valence: {
+    high: ['happy','joyful','feel good','feelgood','uplifting','sunny','bright','fun','cheerful','optimistic','euphoric','celebratory','summer','dance','disco','pop','catchy','playful','warm','smile','sweet','romantic','love','wedding','sing along','singalong','beach','vacation','holiday','christmas'],
+    low:  ['sad','melancholy','melancholic','dark','depressing','depressive','sorrow','grief','blue','lonely','lonesome','heartbreak','heartbroken','minor key','tragic','gothic','goth','doom','funeral','bleak','haunting','haunted','somber','crying','tears','painful','broken','bitter','angry','anger','rage','aggressive','grunge','emo','suicide','despair','dystopian','cold','winter','autumn','rainy','rain']
+  },
+  // density: -1 (sparse) to +1 (dense)
+  density: {
+    high: ['wall of sound','shoegaze','dense','layered','orchestral','symphonic','prog','progressive','psychedelic','noise','drone','black metal','metal','industrial','glitch','maximalist','epic','cinematic','lush','rich','full','thick','complex','heavy','dramatic','atmospheric','atmosphere'],
+    low:  ['minimal','minimalist','acoustic','folk','singer-songwriter','sparse','intimate','solo','piano','guitar','unplugged','stripped','lo-fi','lofi','bedroom','simple','clean','quiet','spare','barebones','reduction','ambient']
+  },
+  // organicness: -1 (synthetic) to +1 (organic)
+  organic: {
+    high: ['acoustic','folk','country','bluegrass','americana','jazz','blues','soul','organic','live','unplugged','singer-songwriter','indie folk','classical','chamber','baroque','orchestral','strings','violin','piano','guitar','vocal','vocals','choir','gospel','natural','warm','vintage','analog','rootsy','traditional','world music','celtic','flamenco'],
+    low:  ['electronic','synth','synthwave','synthpop','techno','house','edm','dubstep','trance','electronica','drum and bass','dnb','drum n bass','industrial','vaporwave','chiptune','idm','glitch','digital','electro','breakbeat','garage','grime','hyperpop','futuristic','robotic','machine','computer','programmed','sequenced']
+  }
+};
+
+// Layer 2: genre→mood fallback (weak but broad signal)
+// Used when explicit mood keywords don't fire. Each entry contributes
+// SMALL nudges to the 4 axes so generic genre tags still produce variation.
+const GENRE_NUDGES = {
+  // [energy, valence, density, organic]  scale: -0.5 to +0.5
+  'rock':         [ 0.3, -0.1,  0.2,  0.0],
+  'pop':          [ 0.2,  0.4,  0.0,  0.0],
+  'indie':        [ 0.0,  0.0, -0.1,  0.1],
+  'indie rock':   [ 0.3, -0.1,  0.1,  0.1],
+  'indie pop':    [ 0.1,  0.3,  0.0,  0.1],
+  'alternative':  [ 0.2, -0.1,  0.1,  0.0],
+  'grunge':       [ 0.5, -0.4,  0.3, -0.1],
+  'metal':        [ 0.6, -0.4,  0.5, -0.2],
+  'punk':         [ 0.6, -0.2,  0.2,  0.0],
+  'hip hop':      [ 0.3, -0.1,  0.2, -0.2],
+  'hip-hop':      [ 0.3, -0.1,  0.2, -0.2],
+  'rap':          [ 0.3, -0.1,  0.2, -0.2],
+  'r&b':          [ 0.0,  0.1,  0.0, -0.1],
+  'rnb':          [ 0.0,  0.1,  0.0, -0.1],
+  'soul':         [ 0.0,  0.2,  0.1,  0.4],
+  'funk':         [ 0.4,  0.4,  0.2,  0.2],
+  'disco':        [ 0.5,  0.5,  0.2, -0.1],
+  'electronic':   [ 0.3,  0.0,  0.0, -0.5],
+  'electronica':  [ 0.2,  0.0,  0.0, -0.5],
+  'edm':          [ 0.5,  0.3,  0.2, -0.5],
+  'house':        [ 0.4,  0.3,  0.1, -0.5],
+  'techno':       [ 0.5,  0.0,  0.2, -0.6],
+  'dubstep':      [ 0.6, -0.1,  0.4, -0.6],
+  'trance':       [ 0.4,  0.2,  0.3, -0.5],
+  'synthwave':    [ 0.2,  0.0,  0.1, -0.5],
+  'vaporwave':    [-0.2,  0.0,  0.0, -0.5],
+  'lo-fi':        [-0.4,  0.0, -0.4, -0.1],
+  'lofi':         [-0.4,  0.0, -0.4, -0.1],
+  'jazz':         [ 0.0,  0.1,  0.2,  0.5],
+  'blues':        [-0.1, -0.2,  0.0,  0.5],
+  'classical':    [ 0.0,  0.0,  0.3,  0.5],
+  'country':      [ 0.0,  0.1, -0.1,  0.5],
+  'folk':         [-0.2,  0.0, -0.4,  0.5],
+  'acoustic':     [-0.3,  0.0, -0.4,  0.5],
+  'reggae':       [-0.1,  0.3,  0.0,  0.2],
+  'ska':          [ 0.4,  0.4,  0.2,  0.1],
+  'ambient':      [-0.6,  0.0, -0.3, -0.2],
+  'shoegaze':     [ 0.1, -0.1,  0.5,  0.0],
+  'post-rock':    [ 0.1, -0.1,  0.4,  0.1],
+  'post rock':    [ 0.1, -0.1,  0.4,  0.1],
+  'emo':          [ 0.3, -0.4,  0.2,  0.0],
+  'goth':         [ 0.0, -0.5,  0.2, -0.1],
+  'gothic':       [ 0.0, -0.5,  0.2, -0.1],
+  'dream pop':    [-0.2,  0.1,  0.3, -0.1],
+  'art rock':     [ 0.1,  0.0,  0.3,  0.0],
+  'experimental': [ 0.0,  0.0,  0.3,  0.0],
+  'psychedelic':  [ 0.2,  0.1,  0.5,  0.1],
+  'progressive':  [ 0.3,  0.0,  0.5,  0.0],
+  'orchestral':   [ 0.0,  0.0,  0.5,  0.5]
+};
+
+function classifyMood(tags) {
+  // tags = [{name, count}]
+  const axes = { energy: 0, valence: 0, density: 0, organic: 0 };
+  let lexiconHits = 0;
+  let totalLexiconWeight = 0;
+
+  // --- Layer 1: explicit mood lexicon ---
+  tags.forEach(t => {
+    const name = t.name.toLowerCase();
+    const w = Math.max(1, t.count || 1);
+    Object.keys(MOOD_LEXICON).forEach(axis => {
+      MOOD_LEXICON[axis].high.forEach(kw => {
+        if (name.includes(kw)) { axes[axis] += w; lexiconHits++; totalLexiconWeight += w; }
+      });
+      MOOD_LEXICON[axis].low.forEach(kw => {
+        if (name.includes(kw)) { axes[axis] -= w; lexiconHits++; totalLexiconWeight += w; }
+      });
+    });
+  });
+
+  // Normalize lexicon contribution
+  if (totalLexiconWeight > 0) {
+    Object.keys(axes).forEach(k => {
+      axes[k] = axes[k] / Math.max(totalLexiconWeight, 1) * 3;
+    });
+  }
+
+  // --- Layer 2: genre nudges (always added, small magnitude) ---
+  const axisNames = ['energy','valence','density','organic'];
+  let nudgeHits = 0;
+  tags.forEach(t => {
+    const name = t.name.toLowerCase().trim();
+    const w = Math.max(1, t.count || 1);
+    if (GENRE_NUDGES[name]) {
+      nudgeHits++;
+      const nudge = GENRE_NUDGES[name];
+      const nudgeWeight = Math.log(w + 1) * 0.3; // log-scale so big counts don't dominate
+      axisNames.forEach((ax, i) => { axes[ax] += nudge[i] * nudgeWeight; });
+    }
+  });
+
+  // Clamp to [-1, 1]
+  Object.keys(axes).forEach(k => {
+    axes[k] = Math.max(-1, Math.min(1, axes[k]));
+  });
+
+  return { ...axes, _lexiconHits: lexiconHits, _nudgeHits: nudgeHits };
+}
+
+function moodHeadline(mood) {
+  const parts = [];
+  if (mood.valence > 0.25) parts.push('bright');
+  else if (mood.valence < -0.25) parts.push('melancholy');
+  if (mood.energy > 0.25) parts.push('intense');
+  else if (mood.energy < -0.25) parts.push('drifting');
+  if (mood.organic > 0.4) parts.push('organic');
+  else if (mood.organic < -0.4) parts.push('synthetic');
+  if (mood.density > 0.4) parts.push('dense');
+  else if (mood.density < -0.4) parts.push('sparse');
+  if (parts.length === 0) return 'unclassifiable';
+  return parts.slice(0, 3).join(', ');
+}
+
+function moodNote(mood) {
+  const e = mood.energy, v = mood.valence, d = mood.density, o = mood.organic;
+  if (e > 0.4 && v > 0.3) return 'A song that wants to move you. The art mirrors that — fast, bright, full of motion.';
+  if (e > 0.4 && v < -0.3) return 'Heavy and dark. The pattern bites back; high contrast, jagged edges.';
+  if (e < -0.3 && v < -0.3) return 'Slow descent. A sparse field, holes where things used to be.';
+  if (e < -0.3 && v > 0.3) return 'Floating, gentle. The art breathes rather than burns.';
+  if (o > 0.4) return 'Warm and acoustic. Curves, flow, things grown rather than built.';
+  if (o < -0.4) return 'Synthetic and clean. Hard geometry, repeating cells, machine-precise.';
+  return 'A balanced mood — the art settles between extremes.';
+}
+
+// ---------- ASCII ART GENERATION (deterministic, dense) -----
+// Strategy: generate a 64x64 noise field, weight it with mood,
+// then map values to a character ramp. Same input -> same output.
+
+function seededRandom(seed) {
+  // Mulberry32
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function hashString(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+// Smooth value noise via bilinear interpolation of a low-res grid
+function makeNoiseField(W, H, scale, rng) {
+  const gw = Math.ceil(W / scale) + 2;
+  const gh = Math.ceil(H / scale) + 2;
+  const grid = [];
+  for (let y = 0; y < gh; y++) {
+    const row = [];
+    for (let x = 0; x < gw; x++) row.push(rng());
+    grid.push(row);
+  }
+  const lerp = (a,b,t) => a + (b-a) * (t*t*(3-2*t));
+  const field = [];
+  for (let y = 0; y < H; y++) {
+    const row = [];
+    for (let x = 0; x < W; x++) {
+      const gx = x / scale, gy = y / scale;
+      const x0 = Math.floor(gx), y0 = Math.floor(gy);
+      const fx = gx - x0, fy = gy - y0;
+      const v00 = grid[y0][x0], v10 = grid[y0][x0+1];
+      const v01 = grid[y0+1][x0], v11 = grid[y0+1][x0+1];
+      row.push(lerp(lerp(v00, v10, fx), lerp(v01, v11, fx), fy));
+    }
+    field.push(row);
+  }
+  return field;
+}
+
+function generateAscii(mood, seed) {
+  const W = 56, H = 56;
+  const rng = seededRandom(seed);
+
+  // Pick a character ramp based on mood
+  let ramp;
+  if (mood.organic > 0.3) {
+    ramp = [' ', '.', ':', '~', '+', '*', 'o', 'O', '0', '@', '#'];
+  } else if (mood.organic < -0.3) {
+    ramp = [' ', '.', ':', '-', '=', '+', '#', '%', '8', '@', '█'];
+  } else if (mood.valence < -0.3) {
+    ramp = [' ', '.', "'", ':', '·', '-', '+', '*', 'x', '#', '▓'];
+  } else {
+    ramp = [' ', '.', ':', '*', 'o', '+', '%', '#', '@', '▓', '█'];
+  }
+
+  // Density controls how much of the field "activates"
+  // Range: ~0.25 (very dense) to ~0.65 (sparse but not empty)
+  // High density -> low threshold (more characters drawn)
+  const threshold = 0.45 - mood.density * 0.20;
+
+  // Energy controls noise scale & frequency
+  // High energy -> small scale (busy, choppy); low energy -> large scale (smooth)
+  const baseScale = 18 - mood.energy * 10;
+
+  // Generate two octaves of noise for richness
+  const f1 = makeNoiseField(W, H, baseScale, seededRandom(seed));
+  const f2 = makeNoiseField(W, H, baseScale * 0.4, seededRandom(seed + 7919));
+
+  // Compose into a final field with mood-driven shape biases
+  const lines = [];
+  for (let y = 0; y < H; y++) {
+    let line = '';
+    for (let x = 0; x < W; x++) {
+      let v = f1[y][x] * 0.65 + f2[y][x] * 0.35;
+
+      // Add radial weighting for organic moods (circular bloom)
+      const cx = W/2, cy = H/2;
+      const dx = (x - cx) / cx, dy = (y - cy) / cy;
+      const r = Math.sqrt(dx*dx + dy*dy);
+
+      if (mood.organic > 0.2) {
+        // Bloom from center
+        v = v * (1 - r * 0.4);
+      }
+      if (mood.organic < -0.2) {
+        // Geometric grid bias
+        const gridBias = ((x % 4 === 0 || y % 4 === 0) ? 0.1 : 0);
+        v += gridBias;
+      }
+      if (mood.valence < -0.3) {
+        // Darker, sparser at edges
+        v *= 1 - r * 0.3;
+      }
+      if (mood.energy > 0.4) {
+        // Sharp contrast — push toward extremes
+        v = v < 0.5 ? v * 0.6 : v * 1.2;
+      }
+
+      v = Math.max(0, Math.min(1, v));
+
+      if (v < threshold) {
+        line += ' ';
+      } else {
+        // Map to ramp
+        const t = (v - threshold) / (1 - threshold);
+        const idx = Math.min(ramp.length - 1, Math.floor(t * ramp.length));
+        line += ramp[idx];
+      }
+    }
+    lines.push(line);
+  }
+  return lines.join('\n');
+}
+
+function moodColor(mood) {
+  // Hue: valence drives it (sad=blue/violet, happy=yellow/orange)
+  // Saturation: energy
+  // Lightness: density (higher density = a bit darker for contrast)
+  let hue;
+  if (mood.valence > 0.3) {
+    hue = 40 + mood.energy * 20; // yellow -> orange
+  } else if (mood.valence < -0.3) {
+    hue = 220 + mood.energy * 60; // blue -> purple
+  } else {
+    hue = 160 + mood.organic * 40; // teals/greens
+  }
+  const sat = 60 + Math.abs(mood.energy) * 30;
+  const light = mood.energy > 0.3 ? 65 : 55;
+  return {
+    color: `hsl(${hue}, ${sat}%, ${light}%)`,
+    glow: `hsla(${hue}, ${sat}%, ${light}%, 0.4)`,
+    // Card gradient tints — medium strength
+    cardTint:    `hsla(${hue}, ${sat}%, ${light + 5}%, 0.18)`,
+    cardTint2:   `hsla(${(hue + 30) % 360}, ${sat - 10}%, ${light}%, 0.10)`,
+    frameTint:   `hsla(${hue}, ${sat}%, ${light}%, 0.07)`,
+    // Hover-only stronger versions for the inner-frame glow + sweep
+    frameTintStrong: `hsla(${hue}, ${sat}%, ${light}%, 0.18)`,
+    sweep:       `hsla(${hue}, ${sat}%, ${light + 10}%, 0.14)`,
+    // For canvas export
+    hue, sat, light
+  };
+}
+
+// ---------- LAST.FM API (via our proxy) ----------------------
+async function lastfmCall(method, params) {
+  const qs = new URLSearchParams({ method, ...params });
+  const r = await fetch(`/api/lastfm?${qs}`);
+  const data = await r.json().catch(() => null);
+  if (!r.ok) {
+    if (r.status === 429) throw new Error((data && data.error) || 'rate limited — slow down a sec');
+    if (r.status === 404) throw new Error((data && data.error) || 'track not found');
+    throw new Error((data && data.error) || `request failed (${r.status})`);
+  }
+  if (!data) throw new Error('server returned invalid response');
+  if (data.error) throw new Error(`Last.fm: ${data.message || 'unknown error'}`);
+  return data;
+}
+
+async function fetchTrack(track, artist) {
+  // 1. Get track info
+  let trackData;
+  try {
+    const result = await lastfmCall('track.getInfo', { artist, track, autocorrect: '1' });
+    if (!result.track) throw new Error(`couldn't find "${track}" by "${artist}" on Last.fm`);
+    trackData = result.track;
+  } catch (e) {
+    if (/not found|no track|track does not exist/i.test(e.message)) {
+      throw new Error(`couldn't find "${track}" by "${artist}" on Last.fm`);
+    }
+    throw e;
+  }
+
+  // 2. Extract tags. Track-level first.
+  let tags = (trackData.toptags && trackData.toptags.tag) ? trackData.toptags.tag : [];
+  if (!Array.isArray(tags)) tags = [tags];
+  tags = tags.filter(t => t && t.name);
+
+  // 3. Fall back to artist tags if track has none
+  let tagSource = 'track';
+  if (tags.length === 0) {
+    try {
+      const artistResult = await lastfmCall('artist.getTopTags', { artist, autocorrect: '1' });
+      let artistTags = (artistResult.toptags && artistResult.toptags.tag) ? artistResult.toptags.tag : [];
+      if (!Array.isArray(artistTags)) artistTags = [artistTags];
+      tags = artistTags.filter(t => t && t.name);
+      tagSource = 'artist';
+    } catch (e) { /* ignore */ }
+  }
+
+  return { trackData, tags, tagSource };
+}
+
+function formatDuration(ms) {
+  if (!ms || ms === '0') return '—:—';
+  const total = Math.floor(parseInt(ms) / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+// ---------- MAIN FLOW ----------------------------------------
+const $ = id => document.getElementById(id);
+const status = msg => { $('status').textContent = msg; $('status').classList.remove('error'); };
+const errorMsg = msg => { $('status').textContent = msg; $('status').classList.add('error'); };
+
+$('generate').addEventListener('click', async () => {
+  const track = $('track').value.trim();
+  const artist = $('artist').value.trim();
+
+  if (!track || !artist) { errorMsg('need a track AND artist'); return; }
+
+  $('generate').disabled = true;
+  status('fetching from last.fm…');
+
+  try {
+    const { trackData: data, tags: tagsNormalized, tagSource } = await fetchTrack(track, artist);
+
+    if (tagsNormalized.length === 0) {
+      status('no tags found — generating a neutral card');
+    } else if (tagSource === 'artist') {
+      status(`using artist-level tags (${tagsNormalized.length} found)`);
+    }
+
+    const mood = classifyMood(tagsNormalized);
+    const seed = hashString(`${data.name}|${data.artist.name}`);
+    const ascii = generateAscii(mood, seed);
+    const palette = moodColor(mood);
+
+    // Render
+    $('ascii').textContent = ascii;
+    $('ascii').style.setProperty('--art-color', palette.color);
+    $('ascii').style.setProperty('--art-glow', palette.glow);
+    document.documentElement.style.setProperty('--art-color', palette.color);
+    document.documentElement.style.setProperty('--art-glow', palette.glow);
+
+    // Mood-tinted card gradient: subtle in corners, stronger inside the frame
+    const card = $('card');
+    card.style.setProperty('--mood-tint', palette.cardTint);
+    card.style.setProperty('--mood-tint-2', palette.cardTint2);
+    card.style.setProperty('--mood-frame-tint', palette.frameTint);
+    card.style.setProperty('--mood-frame-tint-strong', palette.frameTintStrong);
+    card.style.setProperty('--mood-sweep', palette.sweep);
+    card.style.setProperty('--mood-glow-far', palette.glow);
+    card.classList.add('has-art');
+
+    $('cardTitle').textContent = data.name;
+    $('cardArtist').textContent = data.artist.name;
+    $('cardDuration').textContent = formatDuration(data.duration);
+    $('cardTags').textContent = tagsNormalized.slice(0, 3).map(t => t.name).join(' · ').toUpperCase() || 'UNTAGGED';
+
+    // Mood headline + tag cloud
+    $('moodHeadline').innerHTML = `a <em>${moodHeadline(mood)}</em> kind of song.`;
+    $('moodNote').textContent = moodNote(mood);
+    $('tagCloud').innerHTML = '';
+    tagsNormalized.slice(0, 8).forEach((t, i) => {
+      const el = document.createElement('span');
+      el.className = 'tag' + (i === 0 ? ' primary' : '');
+      el.textContent = t.name;
+      $('tagCloud').appendChild(el);
+    });
+
+    $('output').classList.add('visible');
+    status(`done · seed ${seed}`);
+    // Scroll to output
+    $('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Stash for downloads
+    window._lastResult = { ascii, data, mood, palette, tags: tagsNormalized };
+
+  } catch (err) {
+    console.error(err);
+    errorMsg(`couldn't generate: ${err.message}`);
+  } finally {
+    $('generate').disabled = false;
+  }
+});
+
+// ---------- DOWNLOADS ----------------------------------------
+$('dlAscii').addEventListener('click', () => {
+  if (!window._lastResult) return;
+  const { ascii, data } = window._lastResult;
+  const txt = `${data.name} — ${data.artist.name}\n${'─'.repeat(40)}\n\n${ascii}\n\ngenerated by hacho · a Mountstorm Labs project`;
+  const blob = new Blob([txt], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${data.artist.name} - ${data.name}.txt`.replace(/[^a-z0-9 \-_.]/gi, '_');
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+$('dlPng').addEventListener('click', () => {
+  if (!window._lastResult) return;
+  const { ascii, data, mood, palette, tags } = window._lastResult;
+
+  // Render the card to canvas at high resolution
+  const W = 900, H = 1260;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Base gradient
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, '#1d1b18');
+  grad.addColorStop(1, '#0e0d0c');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Mood tint #1 — top-left bloom
+  const tint1 = ctx.createRadialGradient(W * 0.3, 0, 0, W * 0.3, 0, W * 0.7);
+  tint1.addColorStop(0, `hsla(${palette.hue}, ${palette.sat}%, ${palette.light + 5}%, 0.22)`);
+  tint1.addColorStop(1, 'transparent');
+  ctx.fillStyle = tint1;
+  ctx.fillRect(0, 0, W, H);
+
+  // Mood tint #2 — bottom-right bloom (offset hue)
+  const tint2 = ctx.createRadialGradient(W * 0.8, H, 0, W * 0.8, H, W * 0.8);
+  tint2.addColorStop(0, `hsla(${(palette.hue + 30) % 360}, ${palette.sat - 10}%, ${palette.light}%, 0.13)`);
+  tint2.addColorStop(1, 'transparent');
+  ctx.fillStyle = tint2;
+  ctx.fillRect(0, 0, W, H);
+
+  // Border
+  ctx.strokeStyle = '#2a2826';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, W-2, H-2);
+
+  // ASCII frame background (deep dark with mood-tinted inner glow)
+  const pad = 60;
+  const frameY = pad;
+  const frameSize = W - pad * 2;
+  ctx.fillStyle = '#050403';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(pad, frameY, frameSize, frameSize, 38);
+  else ctx.rect(pad, frameY, frameSize, frameSize);
+  ctx.fill();
+
+  // Mood-tinted radial inside the frame (subtle inner glow)
+  ctx.save();
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(pad, frameY, frameSize, frameSize, 38);
+  else ctx.rect(pad, frameY, frameSize, frameSize);
+  ctx.clip();
+  const innerGlow = ctx.createRadialGradient(W/2, frameY + frameSize/2, 0, W/2, frameY + frameSize/2, frameSize/2);
+  innerGlow.addColorStop(0, `hsla(${palette.hue}, ${palette.sat}%, ${palette.light}%, 0.10)`);
+  innerGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = innerGlow;
+  ctx.fillRect(pad, frameY, frameSize, frameSize);
+  ctx.restore();
+
+  // Frame outline
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(pad, frameY, frameSize, frameSize, 38);
+  else ctx.rect(pad, frameY, frameSize, frameSize);
+  ctx.stroke();
+
+  // Draw ASCII
+  const lines = ascii.split('\n');
+  const cols = Math.max(...lines.map(l => l.length));
+  const innerPad = 30;
+  const drawSize = frameSize - innerPad * 2;
+  const charSize = drawSize / cols;
+  ctx.fillStyle = palette.color;
+  ctx.shadowColor = palette.glow;
+  ctx.shadowBlur = 8;
+  ctx.font = `${charSize * 1.1}px "JetBrains Mono", monospace`;
+  ctx.textBaseline = 'top';
+  lines.forEach((line, i) => {
+    for (let j = 0; j < line.length; j++) {
+      const ch = line[j];
+      if (ch !== ' ') {
+        ctx.fillText(ch, pad + innerPad + j * charSize, frameY + innerPad + i * charSize);
+      }
+    }
+  });
+  ctx.shadowBlur = 0;
+
+  // Text below
+  const textY = frameY + frameSize + 50;
+  ctx.fillStyle = '#8a857a';
+  ctx.font = '20px "JetBrains Mono", monospace';
+  const tagText = tags.slice(0,3).map(t => t.name.toUpperCase()).join(' · ') || 'UNTAGGED';
+  ctx.fillText(tagText, pad, textY);
+
+  ctx.fillStyle = '#f5f1e8';
+  ctx.font = '600 56px "Fraunces", Georgia, serif';
+  ctx.fillText(data.name, pad, textY + 36);
+
+  ctx.fillStyle = '#8a857a';
+  ctx.font = 'italic 36px "Fraunces", Georgia, serif';
+  ctx.fillText(data.artist.name, pad, textY + 100);
+
+  // Duration on the right
+  ctx.fillStyle = '#8a857a';
+  ctx.font = '20px "JetBrains Mono", monospace';
+  const dur = formatDuration(data.duration);
+  const elapsed = '1:12';
+  ctx.fillText(elapsed, pad, H - pad - 100);
+  ctx.textAlign = 'right';
+  ctx.fillText(dur, W - pad, H - pad - 100);
+  ctx.textAlign = 'left';
+
+  // Progress bar
+  ctx.fillStyle = '#2a2826';
+  ctx.fillRect(pad, H - pad - 70, W - pad*2, 3);
+  ctx.fillStyle = '#f5f1e8';
+  ctx.fillRect(pad, H - pad - 70, (W - pad*2) * 0.32, 3);
+
+  // hacho footer
+  ctx.fillStyle = '#5a554a';
+  ctx.font = '14px "JetBrains Mono", monospace';
+  ctx.fillText('hacho · a Mountstorm Labs project', pad, H - pad - 20);
+
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${data.artist.name} - ${data.name}.png`.replace(/[^a-z0-9 \-_.]/gi, '_');
+    a.click();
+    URL.revokeObjectURL(url);
+  }, 'image/png');
+});
+
+// Allow Enter key to submit
+['track','artist'].forEach(id => {
+  $(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') $('generate').click();
+  });
+});
+
+// ---------- INFO MODAL ---------------------------------------
+const modal = $('infoModal');
+const backdrop = $('modalBackdrop');
+function openModal() {
+  modal.classList.add('visible');
+  backdrop.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  modal.classList.remove('visible');
+  backdrop.classList.remove('visible');
+  document.body.style.overflow = '';
+}
+$('infoBtn').addEventListener('click', openModal);
+$('modalClose').addEventListener('click', closeModal);
+backdrop.addEventListener('click', closeModal);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && modal.classList.contains('visible')) closeModal();
+});
+
+// Show a teaser ASCII on load so the page isn't empty-feeling
+(function teaser() {
+  const fakeMood = { energy: 0.2, valence: 0.1, density: 0.3, organic: 0.0 };
+  const teaserArt = generateAscii(fakeMood, hashString('teaser'));
+  // Don't auto-show the section — just leave generator ready.
+  // (User wanted to drive it with their input.)
+})();
+</script>
+</body>
+</html>
